@@ -1,14 +1,165 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import Status from './components/Status';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableHighlight
+} from "react-native";
+import Status from "./components/Status";
+import MessageList from "./components/MessageList";
+import Toolbar from "./components/Toolbar";
+import ImageGrid from "./components/ImageGrid";
+import {
+  createImageMessage,
+  createLocationMessage,
+  createTextMessage
+} from "./utils/MessageUtils";
 
 export default class App extends React.Component {
+  state = {
+    messages: [
+      createImageMessage("https://unsplash.it/300/300"),
+      createTextMessage("World"),
+      createTextMessage("Hello"),
+      createLocationMessage({
+        latitude: 37.78825,
+        longitude: -122.4324
+      })
+    ],
+    fullscreenImageId: null,
+    isInputFocused: false
+  };
+
+  dismissFullscreenImage = () => {
+    this.setState({ fullscreenImageId: null });
+  };
+
+  handlePressMessage = ({ id, type }) => {
+    switch (type) {
+      case "text":
+        Alert.alert(
+          "Delete message?",
+          "Are you sure you want to permanently delete this message?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel"
+            },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => {
+                const { messages } = this.state;
+                this.setState({
+                  messages: messages.filter(message => message.id !== id)
+                });
+              }
+            }
+          ]
+        );
+        break;
+      case "image":
+        this.setState({
+          fullscreenImageId: id,
+          isInputFocused: false
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
+  handlePressImage = uri => {
+    const { messages } = this.state;
+    this.setState({
+      messages: [createImageMessage(uri), ...messages]
+    });
+  };
+
+  handlePressToolbarCamera = () => {
+    // ...
+  };
+
+  handlePressToolbarLocation = () => {
+    const { messages } = this.state;
+    navigator.geolocation.getCurrentPosition(position => {
+      const {
+        coords: { latitude, longitude }
+      } = position;
+      this.setState({
+        messages: [
+          createLocationMessage({
+            latitude,
+            longitude
+          }),
+          ...messages
+        ]
+      });
+    });
+  };
+
+  handleSubmit = text => {
+    const { messages } = this.state;
+    this.setState({
+      messages: [createTextMessage(text), ...messages]
+    });
+  };
+
+  renderToolbar() {
+    const { isInputFocused } = this.state;
+    return (
+      <View style={styles.toolbar}>
+        <Toolbar
+          isFocused={isInputFocused}
+          onSubmit={this.handleSubmit}
+          onChangeFocus={this.handleChangeFocus}
+          onPressCamera={this.handlePressToolbarCamera}
+          onPressLocation={this.handlePressToolbarLocation}
+        />
+      </View>
+    );
+  }
+
+  renderInputMethodEditor = () => (
+    <View style={styles.inputMethodEditor}>
+      <ImageGrid onPressImage={this.handlePressImage} />
+    </View>
+  );
+
+  handleChangeFocus = isFocused => {
+    this.setState({ isInputFocused: isFocused });
+  };
+
   renderMessageList() {
-    return <View style={styles.content} />;
+    const { messages } = this.state;
+    return (
+      <View style={styles.content}>
+        <MessageList
+          messages={messages}
+          onPressMessage={this.handlePressMessage}
+        />
+      </View>
+    );
   }
-  renderInputMethodEditor() {
-    return <View style={styles.inputMethodEditor} />;
-  }
+
+  renderFullscreenImage = () => {
+    const { messages, fullscreenImageId } = this.state;
+    if (!fullscreenImageId) return null;
+    const image = messages.find(message => message.id === fullscreenImageId);
+    if (!image) return null;
+    const { uri } = image;
+    return (
+      <TouchableHighlight
+        style={styles.fullscreenOverlay}
+        onPress={this.dismissFullscreenImage}
+      >
+        <Image style={styles.fullscreenImage} source={{ uri }} />
+      </TouchableHighlight>
+    );
+  };
+
   renderToolbar() {
     return <View style={styles.toolbar} />;
   }
@@ -19,6 +170,7 @@ export default class App extends React.Component {
         {this.renderMessageList()}
         {this.renderToolbar()}
         {this.renderInputMethodEditor()}
+        {this.renderFullscreenImage()}
       </View>
     );
   }
@@ -41,5 +193,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.04)",
     backgroundColor: "white"
+  },
+  fullscreenOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "black",
+    zIndex: 2
+  },
+  fullscreenImage: {
+    flex: 1,
+    resizeMode: "contain"
   }
 });
