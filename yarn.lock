@@ -4565,7 +4565,12 @@ react-native-gesture-handler@1.0.9:
     invariant "^2.2.2"
     prop-types "^15.5.10"
 
-"react-native-maps@github:expo/react-native-maps#v0.22.1-exp.0":
+react-native-iphone-x-helper@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/react-native-iphone-x-helper/-/react-native-iphone-x-helper-1.0.1.tgz#950dbdaca66f458689a7e9697c5beb9bd53f98f2"
+  integrity sha512-n9JazkbulcA9kV44Qq5nHN+I68voJvlhdl4IUzNn0w/+t/A4jqnEThLPsl3G2SKPpdJw7Z6RwxJIDS2QddXyng==
+
+react-native-maps@expo/react-native-maps#v0.22.1-exp.0:
   version "0.22.1"
   resolved "https://codeload.github.com/expo/react-native-maps/tar.gz/e6f98ff7272e5d0a7fe974a41f28593af2d77bb2"
 
